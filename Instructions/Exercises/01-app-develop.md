@@ -166,6 +166,80 @@ Now you're ready to use the Azure OpenAI SDK to consume your deployed model.
 
 4. Save the changes to the code file.
 
+5. for Windows, you can try this code:
+
+    **Python**: application.py
+
+    ```python
+
+import os
+import asyncio
+from dotenv import load_dotenv
+from openai import AsyncAzureOpenAI
+
+printFullResponse = False
+
+async def create_client():
+    load_dotenv()
+    azure_oai_endpoint = os.getenv("AZURE_OAI_ENDPOINT")
+    azure_oai_key = os.getenv("AZURE_OAI_KEY")
+    
+    return AsyncAzureOpenAI(
+        azure_endpoint=azure_oai_endpoint,
+        api_key=azure_oai_key,
+        api_version="2024-02-15-preview"
+    )
+
+async def main():
+    try:
+        azure_oai_deployment = os.getenv("AZURE_OAI_DEPLOYMENT")
+        async with await create_client() as client:
+            while True:
+                print("------------------\nPausing the app to allow you to change the system prompt.\nPress enter to continue...")
+                input()
+
+                system_text = open(file="system.txt", encoding="utf8").read().strip()
+                user_text = input("Enter user message, or 'quit' to exit: ")
+                
+                if user_text.lower() == 'quit' or system_text.lower() == 'quit':
+                    print('Exiting program...')
+                    break
+
+                await call_openai_model(
+                    system_message=system_text,
+                    user_message=user_text,
+                    model=azure_oai_deployment,
+                    client=client
+                )
+
+    except Exception as ex:
+        print(f"An error occurred: {ex}")
+
+async def call_openai_model(system_message, user_message, model, client):
+    messages = [
+        {"role": "system", "content": system_message},
+        {"role": "user", "content": user_message},
+    ]
+
+    print("\nSending request to Azure OpenAI model...\n")
+
+    response = await client.chat.completions.create(
+        model=model,
+        messages=messages,
+        temperature=0.7,
+        max_tokens=800
+    )
+
+    if printFullResponse:
+        print(response)
+
+    print("Response:\n" + response.choices[0].message.content + "\n")
+
+if __name__ == '__main__':
+    asyncio.run(main())
+
+```
+
 ## Run your application
 
 Now that your app has been configured, run it to send your request to your model and observe the response. You'll notice the only difference between the different options is the content of the prompt, all other parameters (such as token count and temperature) remain the same for each request.
