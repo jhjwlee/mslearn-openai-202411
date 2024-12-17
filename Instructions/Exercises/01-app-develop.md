@@ -179,21 +179,20 @@ Now you're ready to use the Azure OpenAI SDK to consume your deployed model.
     
     printFullResponse = False
     
-    async def create_client():
+    async def main():
+        # Get configuration settings
         load_dotenv()
         azure_oai_endpoint = os.getenv("AZURE_OAI_ENDPOINT")
         azure_oai_key = os.getenv("AZURE_OAI_KEY")
-        
-        return AsyncAzureOpenAI(
+        azure_oai_deployment = os.getenv("AZURE_OAI_DEPLOYMENT")
+    
+        # Configure the Azure OpenAI client
+        async with AsyncAzureOpenAI(
             azure_endpoint=azure_oai_endpoint,
             api_key=azure_oai_key,
             api_version="2024-02-15-preview"
-        )
-    
-    async def main():
-        try:
-            azure_oai_deployment = os.getenv("AZURE_OAI_DEPLOYMENT")
-            async with await create_client() as client:
+        ) as client:
+            try:
                 while True:
                     print("------------------\nPausing the app to allow you to change the system prompt.\nPress enter to continue...")
                     input()
@@ -212,8 +211,9 @@ Now you're ready to use the Azure OpenAI SDK to consume your deployed model.
                         client=client
                     )
     
-        except Exception as ex:
-            print(f"An error occurred: {ex}")
+            except Exception as ex:
+                print(f"An error occurred: {ex}")
+    
     
     async def call_openai_model(system_message, user_message, model, client):
         messages = [
